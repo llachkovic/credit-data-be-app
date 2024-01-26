@@ -1,5 +1,6 @@
 # project
 /venv
+/models
 
 # ide
 /.idea
