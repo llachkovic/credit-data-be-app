@@ -1,40 +1,43 @@
+import pandas as pd
+
+
 class DataPoint:
-    def __init__(self, Attribute5, Attribute8, Attribute13, Attribute1_A13,
-                 Attribute1_A14, Attribute3_A34, Attribute4_A41, Attribute4_A42,
-                 Attribute4_A43, Attribute6_A61, Attribute6_A62, Attribute6_A63,
-                 Attribute6_A64, Attribute6_A65, Attribute7_A71, Attribute7_A72,
-                 Attribute7_A73, Attribute7_A74, Attribute7_A75, Attribute9_A93,
-                 Attribute12_A121, Attribute12_A122, Attribute12_A123,
-                 Attribute12_A124, Attribute14_A143, Attribute15_A151,
-                 Attribute15_A152, Attribute15_A153, Attribute19_A191,
-                 Attribute19_A192):
-        self.Attribute5 = Attribute5
-        self.Attribute8 = Attribute8
-        self.Attribute13 = Attribute13
-        self.Attribute1_A13 = Attribute1_A13
-        self.Attribute1_A14 = Attribute1_A14
-        self.Attribute3_A34 = Attribute3_A34
-        self.Attribute4_A41 = Attribute4_A41
-        self.Attribute4_A42 = Attribute4_A42
-        self.Attribute4_A43 = Attribute4_A43
-        self.Attribute6_A61 = Attribute6_A61
-        self.Attribute6_A62 = Attribute6_A62
-        self.Attribute6_A63 = Attribute6_A63
-        self.Attribute6_A64 = Attribute6_A64
-        self.Attribute6_A65 = Attribute6_A65
-        self.Attribute7_A71 = Attribute7_A71
-        self.Attribute7_A72 = Attribute7_A72
-        self.Attribute7_A73 = Attribute7_A73
-        self.Attribute7_A74 = Attribute7_A74
-        self.Attribute7_A75 = Attribute7_A75
-        self.Attribute9_A93 = Attribute9_A93
-        self.Attribute12_A121 = Attribute12_A121
-        self.Attribute12_A122 = Attribute12_A122
-        self.Attribute12_A123 = Attribute12_A123
-        self.Attribute12_A124 = Attribute12_A124
-        self.Attribute14_A143 = Attribute14_A143
-        self.Attribute15_A151 = Attribute15_A151
-        self.Attribute15_A152 = Attribute15_A152
-        self.Attribute15_A153 = Attribute15_A153
-        self.Attribute19_A191 = Attribute19_A191
-        self.Attribute19_A192 = Attribute19_A192
+    def __init__(self, df: pd.DataFrame):
+        data: pd.Series = df.iloc[0]
+        self.creditAmount = data.get('creditAmount', 0)
+        self.installmentRate = data.get('installmentRate', 0)
+        self.age = data.get('age', 0)
+        self.checkingAccountStatus_A13 = data.get('checkingAccountStatus_GreaterThanOrEqual200DM', False)
+        self.checkingAccountStatus_A14 = data.get('checkingAccountStatus_NoCheckingAccount', False)
+        self.creditHistory_A34 = data.get('creditHistory_DelayInPaying', False)
+        self.purpose_A41 = data.get('purpose_CarNew', False)
+        self.purpose_A42 = data.get('purpose_CarUsed', False)
+        self.purpose_A43 = data.get('purpose_FurnitureEquipment', False)
+        self.savingsAccount_A61 = data.get('savingsAccount_LessThan100DM', False)
+        self.savingsAccount_A62 = data.get('savingsAccount_Between100And500DM', False)
+        self.savingsAccount_A63 = data.get('savingsAccount_Between500And1000DM', False)
+        self.savingsAccount_A64 = data.get('savingsAccount_GreaterThanOrEqual1000DM', False)
+        self.savingsAccount_A65 = data.get('savingsAccount_Unknown', False)
+        self.employmentDuration_A71 = data.get('employmentDuration_Unemployed', False)
+        self.employmentDuration_A72 = data.get('employmentDuration_LessThan1Year', False)
+        self.employmentDuration_A73 = data.get('employmentDuration_Between1And4Years', False)
+        self.employmentDuration_A74 = data.get('employmentDuration_Between4And7Years', False)
+        self.employmentDuration_A75 = data.get('employmentDuration_GreaterThanOrEqual7Years', False)
+        self.personalStatus_A93 = data.get('personalStatus_MaleSingle', False)
+        self.property_A121 = data.get('property_RealEstate', False)
+        self.property_A122 = data.get('property_BuildingSociety', False)
+        self.property_A123 = data.get('property_CarOrOther', False)
+        self.property_A124 = data.get('property_Unknown', False)
+        self.otherInstallmentPlans_A143 = data.get('otherInstallmentPlans_None', False)
+        self.housing_A151 = data.get('housing_Rent', False)
+        self.housing_A152 = data.get('housing_Own', False)
+        self.housing_A153 = data.get('housing_ForFree', False)
+        self.telephone_A191 = data.get('telephone_None', False)
+        self.telephone_A192 = data.get('telephone_Registered', False)
+
+
+def one_hot_encode_payload(df, column):
+    dummies = pd.get_dummies(df[column], prefix=column)
+    df = pd.concat([df, dummies], axis=1)
+    df.drop(column, axis=1, inplace=True)
+    return df
