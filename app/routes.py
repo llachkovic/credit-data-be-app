@@ -1,19 +1,19 @@
-from flask import Flask, request, jsonify
 import joblib
 import numpy as np
+import pandas as pd
+from flask import request, jsonify, Blueprint
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-import pandas as pd
-from data_types import one_hot_encode_payload
-from flask_cors import CORS
-
-from data_types import DataPoint
-
-app = Flask(__name__)
-CORS(app)
+import os
 
 
-@app.route('/', methods=['POST'])
+from app.data_types import DataPoint, one_hot_encode_payload
+from app.models import db, PredictionResult
+
+main_blueprint = Blueprint("main", __name__)
+
+
+@main_blueprint.route('/', methods=['POST'])
 def predict():
     if request.is_json:
         data = request.get_json()
@@ -25,24 +25,33 @@ def predict():
             df = one_hot_encode_payload(df, column)
 
         data_point = DataPoint(df)
-        model: LogisticRegression = joblib.load('models/linear_regression.joblib')
-        scaler: StandardScaler = joblib.load('models/linear_regression.scaler.joblib')
+
+        model_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '..', 'models', 'linear_regression.joblib'))
+        scaler_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '..', 'models', 'linear_regression.scaler.joblib'))
+
+        model: LogisticRegression = joblib.load(model_path)
+        scaler: StandardScaler = joblib.load(scaler_path)
 
         data_array = np.array([data_point.__dict__[key] for key in data_point.__dict__])
+        print(data_array)
         data_array_scaled = scaler.transform(data_array.reshape(1, -1))
         print(data_array_scaled)
         prediction = model.predict_proba(data_array_scaled)[0]
+        print(prediction)
+
+        new_record = PredictionResult(probability=prediction[0])
+        db.session.add(new_record)
+        db.session.commit()
 
         response = {
-            'probability_good': prediction[0],
-            'probability_bad': prediction[1]
+            'id': new_record.id,
+            'probability': new_record.probability
         }
+
         return jsonify(response)
 
     else:
         error_result = {'error': 'Invalid request format'}
         return jsonify(error_result), 400
-
-
-if __name__ == '__main__':
-    app.run()
