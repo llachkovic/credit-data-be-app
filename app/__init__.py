@@ -4,7 +4,7 @@ from flask_cors import CORS
 from app.config import Config
 from app.models import db
 from app.routes import main_blueprint
-from classifier import get_model_and_scaler
+from classifier import get_model
 
 
 def create_app():
@@ -18,12 +18,11 @@ def create_app():
     # Initialize the database
     db.init_app(app)
 
-    model, scaler = get_model_and_scaler()
+    model = get_model()
 
     @app.before_request
     def load_model_and_scaler():
         g.model = model
-        g.scaler = scaler
 
     # Register routes
     app.register_blueprint(main_blueprint)

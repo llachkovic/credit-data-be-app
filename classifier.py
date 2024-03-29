@@ -1,14 +1,14 @@
 import pandas as pd
 from imblearn.over_sampling import SMOTE
-from sklearn.feature_selection import RFE
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 from ucimlrepo import fetch_ucirepo
+from sklearn.feature_selection import SelectFromModel
 
 
-def get_model_and_scaler():
+def get_model():
+    random_state = 42
     column_mapping = {
         'Attribute1': 'checkingAccountStatus',
         'Attribute2': 'durationInMonths',
@@ -39,33 +39,48 @@ def get_model_and_scaler():
 
     features.rename(columns=column_mapping, inplace=True)
 
-    features_numeric = pd.get_dummies(features)
-    print(features_numeric.head())
+    # Separate numerical and categorical features
+    numerical_features = features.select_dtypes(include=['int64', 'float64'])
+    categorical_features = features.select_dtypes(include=['object'])
 
-    X_train, X_test, y_train, y_test = train_test_split(features_numeric, targets, test_size=0.2, random_state=42)
+    categorical_features = pd.get_dummies(categorical_features)
 
-    smote = SMOTE(random_state=42)
+    features_processed = pd.concat([numerical_features, categorical_features], axis=1)
+
+    pd.set_option('display.max_columns', None)
+
+    X_train, X_test, y_train, y_test = train_test_split(features_processed, targets, test_size=0.2, random_state=random_state)
+
+    smote = SMOTE(random_state=random_state)
     X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
 
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train_resampled)
-    X_test_scaled = scaler.transform(X_test)
+    model = LogisticRegression(penalty='l1', solver='liblinear', random_state=random_state)
 
-    model = LogisticRegression()
+    # Feature selection using Lasso (L1 regularization)
+    selector = SelectFromModel(estimator=model)
+    selector.fit(X_train_resampled, y_train_resampled)
 
-    rfe = RFE(model, n_features_to_select=None)
-    X_train_rfe = rfe.fit_transform(X_train_scaled, y_train_resampled)
+    # Transform training and testing sets
+    X_train_selected = selector.transform(X_train_resampled)
+    X_test_selected = selector.transform(X_test)
 
-    model.fit(X_train_rfe, y_train_resampled)
+    # Train the model
+    model.fit(X_train_selected, y_train_resampled)
 
-    X_test_rfe = rfe.transform(X_test_scaled)
-    y_pred_rfe = model.predict(X_test_rfe)
+    # Evaluate the model
+    y_pred = model.predict(X_test_selected)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"Accuracy: {accuracy:.2f}")
 
-    accuracy_rfe = accuracy_score(y_test, y_pred_rfe)
-    print(f"Accuracy with feature selection and SMOTE: {accuracy_rfe:.2%}")
+    print("Selected feature names:")
+    selected_feature_names = features_processed.columns[selector.get_support()]
+    print(selected_feature_names)
 
-    print(f"Optimal number of features selected by RFE: {rfe.n_features_}")
+    # Additional evaluation metrics
+    print("\nClassification Report:")
+    print(classification_report(y_test, y_pred))
 
-    scaler.fit_transform(X_train_rfe)
+    print("\nConfusion Matrix:")
+    print(confusion_matrix(y_test, y_pred))
 
-    return model, scaler
+    return model
