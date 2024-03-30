@@ -9,8 +9,8 @@ from app.models import db, PredictionResult
 main_blueprint = Blueprint("main", __name__)
 
 
-@main_blueprint.route('/', methods=['POST'])
-def predict():
+@main_blueprint.route('/predict', methods=['POST'])
+def predict_result():
     model: LogisticRegression = g.model
     if request.is_json:
         data = request.get_json()
@@ -44,3 +44,21 @@ def predict():
     else:
         error_result = {'error': 'Invalid request format'}
         return jsonify(error_result), 400
+
+
+@main_blueprint.route('/results', methods=['GET'])
+def get_all_results():
+    results = PredictionResult.query.all()
+    response = [{'id': result.id, 'probability': result.probability} for result in results]
+    return jsonify(response)
+
+
+@main_blueprint.route('/results/<int:result_id>', methods=['GET'])
+def get_result(result_id):
+    result = PredictionResult.query.get(result_id)
+    if result:
+        response = {'id': result.id, 'probability': result.probability}
+        return jsonify(response)
+    else:
+        return jsonify({'error': 'Result not found'}), 404
+
