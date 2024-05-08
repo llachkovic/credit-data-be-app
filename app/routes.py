@@ -30,15 +30,41 @@ def predict_result():
         prediction = model.predict_proba(data_array.reshape(1, -1))[0]
         print(prediction)
 
-        new_record = PredictionResult(probability=prediction[0])
-        db.session.add(new_record)
-        db.session.commit()
+        new_record = PredictionResult(
+            probability=prediction[0],
+            age=data['age'],
+            checking_account_status=data['checkingAccountStatus'],
+            credit_amount=data['creditAmount'],
+            credit_history=data['creditHistory'],
+            duration_in_months=data['durationInMonths'],
+            employment_duration=data['employmentDuration'],
+            foreign_worker=data['foreignWorker'],
+            housing=data['housing'],
+            installment_rate=data['installmentRate'],
+            job=data['job'],
+            number_of_existing_credits=data['numberOfExistingCredits'],
+            number_of_people_liable_for_maintenance=data['numberOfPeopleLiableForMaintenance'],
+            other_debtors=data['otherDebtors'],
+            other_installment_plans=data['otherInstallmentPlans'],
+            personal_status=data['personalStatus'],
+            present_residence_since=data['presentResidenceSince'],
+            property=data['property'],
+            purpose=data['purpose'],
+            savings_account=data['savingsAccount'],
+            telephone=data['telephone']
+        )
 
-        response = {
-            'id': new_record.id,
-            'probability': new_record.probability
-        }
+        try:
+            db.session.add(new_record)
+            db.session.commit()
+        except Exception as e:
+            error_message = str(e)
+            return jsonify({'error': error_message}), 500
 
+        db.session.refresh(new_record)
+
+        response = {key: getattr(new_record, key) for key in new_record.__dict__.keys() if not key.startswith('_')}
+        print("Response:", response)
         return jsonify(response)
 
     else:
@@ -57,8 +83,9 @@ def get_all_results():
 def get_result(result_id):
     result = PredictionResult.query.get(result_id)
     if result:
-        response = {'id': result.id, 'probability': result.probability}
+        response = {key: getattr(result, key) for key in result.__dict__.keys() if not key.startswith('_')}
         return jsonify(response)
+
     else:
         return jsonify({'error': 'Result not found'}), 404
 
