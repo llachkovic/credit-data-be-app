@@ -51,7 +51,8 @@ def predict_result():
             property=data['property'],
             purpose=data['purpose'],
             savings_account=data['savingsAccount'],
-            telephone=data['telephone']
+            telephone=data['telephone'],
+            email=data['email']
         )
 
         try:
@@ -75,7 +76,7 @@ def predict_result():
 @main_blueprint.route('/results', methods=['GET'])
 def get_all_results():
     results = PredictionResult.query.all()
-    response = [{'id': result.id, 'probability': result.probability} for result in results]
+    response = [{'id': result.id, 'probability': result.probability, 'email': result.email} for result in results]
     return jsonify(response)
 
 

@@ -26,4 +26,4 @@ class PredictionResult(db.Model):
     purpose = db.Column(db.String)
     savings_account = db.Column(db.String)
     telephone = db.Column(db.String)
-
+    email = db.Column(db.String)
