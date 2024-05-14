@@ -1,4 +1,4 @@
-from flask import Flask, g
+from flask import Flask
 from flask_cors import CORS
 
 from app.config import Config
@@ -20,9 +20,7 @@ def create_app():
 
     model = get_model()
 
-    @app.before_request
-    def load_model_and_scaler():
-        g.model = model
+    app.model = model
 
     # Register routes
     app.register_blueprint(main_blueprint)

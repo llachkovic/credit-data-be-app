@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from flask import request, jsonify, Blueprint, g
+from flask import request, jsonify, Blueprint, current_app
 from sklearn.linear_model import LogisticRegression
 
 from app.data_types import DataPoint, one_hot_encode_payload
@@ -11,7 +11,7 @@ main_blueprint = Blueprint("main", __name__)
 
 @main_blueprint.route('/predict', methods=['POST'])
 def predict_result():
-    model: LogisticRegression = g.model
+    model: LogisticRegression = current_app.model
     if request.is_json:
         data = request.get_json()
         df = pd.DataFrame([data])
@@ -89,4 +89,3 @@ def get_result(result_id):
 
     else:
         return jsonify({'error': 'Result not found'}), 404
-
