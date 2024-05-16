@@ -3,7 +3,7 @@ import pandas as pd
 from flask import request, jsonify, Blueprint, current_app
 from sklearn.linear_model import LogisticRegression
 
-from app.data_types import DataPoint, one_hot_encode_payload
+from app.data_types import DataPoint
 from app.models import db, PredictionResult
 
 main_blueprint = Blueprint("main", __name__)
@@ -16,13 +16,14 @@ def predict_result():
         data = request.get_json()
         df = pd.DataFrame([data])
 
-        categorical_columns = ['checkingAccountStatus', 'creditHistory', 'purpose', 'savingsAccount',
-                               'employmentDuration', 'personalStatus', 'otherDebtors', 'property',
-                               'otherInstallmentPlans', 'housing', 'job', 'telephone', 'foreignWorker']
-        for column in categorical_columns:
-            df = one_hot_encode_payload(df, column)
+        numerical_features = df.select_dtypes(include=['int64', 'float64'])
+        categorical_features = df.select_dtypes(include=['object'])
 
-        data_point = DataPoint(df)
+        categorical_features = pd.get_dummies(categorical_features)
+
+        df_encoded = pd.concat([numerical_features, categorical_features], axis=1)
+
+        data_point = DataPoint(df_encoded)
         print(data_point.__dict__)
 
         data_array = np.array([data_point.__dict__[key] for key in data_point.__dict__])
@@ -65,7 +66,6 @@ def predict_result():
         db.session.refresh(new_record)
 
         response = {key: getattr(new_record, key) for key in new_record.__dict__.keys() if not key.startswith('_')}
-        print("Response:", response)
         return jsonify(response)
 
     else:

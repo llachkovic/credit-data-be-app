@@ -58,10 +58,3 @@ class DataPoint:
         self.telephone_A191 = data.get('telephone_None', False)
         self.telephone_A192 = data.get('telephone_Registered', False)
         self.foreignWorker_A201 = data.get('foreignWorker_Yes', default=False)
-
-
-def one_hot_encode_payload(df, column):
-    dummies = pd.get_dummies(df[column], prefix=column)
-    df = pd.concat([df, dummies], axis=1)
-    df.drop(column, axis=1, inplace=True)
-    return df
