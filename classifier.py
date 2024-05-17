@@ -54,7 +54,7 @@ def get_model():
     smote = SMOTE(random_state=random_state)
     X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
 
-    model = LogisticRegression(penalty='l1', solver='liblinear', random_state=random_state, class_weight={1: 1, 2: 1})
+    model = LogisticRegression(penalty='l1', solver='liblinear', random_state=random_state, class_weight={1: 1, 2: 2})
 
     # Feature selection using Lasso (L1 regularization)
     selector = SelectFromModel(estimator=model)
